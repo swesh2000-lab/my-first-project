@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineMatch — Find What to Watch Next</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --transition: 0.3s ease;
+}
+
+[data-theme="dark"] {
+  --bg:       #0c0b09;
+  --bg2:      #131210;
+  --bg3:      #1a1815;
+  --surface:  #1f1d1a;
+  --border:   #2a2824;
+  --border2:  #383430;
+  --text:     #f0ebe0;
+  --text2:    #a09880;
+  --text3:    #5a5448;
+  --gold:     #c8a040;
+  --gold2:    #e8c060;
+  --gold-bg:  rgba(200,160,64,0.08);
+  --rust:     #c05030;
+  --green:    #508060;
+  --blue:     #4878a0;
+  --purple:   #806890;
+  --film-c:   #c8a040;
+  --show-c:   #4878a0;
+  --anime-c:  #c05030;
+  --book-c:   #508060;
+  --poster-grad: linear-gradient(160deg, #1a1410 0%, #0c0b09 50%, #101418 100%);
+  --hero-line: rgba(200,160,64,0.15);
+  --grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+}
+
+[data-theme="light"] {
+  --bg:       #f5f0e4;
+  --bg2:      #ece7d8;
+  --bg3:      #e4ddc8;
+  --surface:  #faf7f0;
+  --border:   #d8d0bc;
+  --border2:  #c8c0a8;
+  --text:     #1a1610;
+  --text2:    #6a6050;
+  --text3:    #a09880;
+  --gold:     #9a6e20;
+  --gold2:    #b88828;
+  --gold-bg:  rgba(154,110,32,0.06);
+  --rust:     #a04030;
+  --green:    #386848;
+  --blue:     #306090;
+  --purple:   #604878;
+  --film-c:   #9a6e20;
+  --show-c:   #306090;
+  --anime-c:  #a04030;
+  --book-c:   #386848;
+  --poster-grad: linear-gradient(160deg, #ece4d0 0%, #f5f0e4 50%, #e8eef4 100%);
+  --hero-line: rgba(154,110,32,0.12);
+  --grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background var(--transition), color var(--transition);
+  overflow-x: hidden;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: var(--grain);
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.6;
+}
+
+/* ── THEME TOGGLE ── */
+.theme-btn {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 100;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text2);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.theme-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: var(--poster-grad);
+  padding: 2rem 1.5rem;
+}
+
+.hero-lines {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-lines::before,
+.hero-lines::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--hero-line);
+}
+
+.hero-lines::before {
+  width: 800px; height: 800px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.hero-lines::after {
+  width: 1200px; height: 1200px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 700px;
+}
+
+.hero-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1.5rem;
+  opacity: 0.8;
+}
+
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(4rem, 14vw, 9rem);
+  font-weight: 300;
+  line-height: 0.88;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  margin-bottom: 2rem;
+}
+
+.hero-title em {
+  font-style: italic;
+  color: var(--gold);
+  display: block;
+}
+
+.hero-desc {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.7;
+  max-width: 420px;
+  margin: 0 auto 2.5rem;
+  letter-spacing: 0.01em;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background: var(--gold);
+  color: var(--bg);
+  border: none;
+  border-radius: 2px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.hero-cta:hover { background: var(--gold2); transform: translateY(-1px); }
+.hero-cta:active { transform: translateY(0); }
+
+.hero-stats {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2.5rem;
+  z-index: 2;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-top: 3px;
+}
+
+.hero-scroll {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 2rem;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text3);
+  writing-mode: vertical-rl;
+  z-index: 2;
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+
+@keyframes scrollPulse { 0%,100%{opacity:0.3} 50%{opacity:0.8} }
+
+/* ── FORM SECTION ── */
+.form-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 5rem 1.5rem 6rem;
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
+
+.form-header h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+
+.form-header h2 em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.form-header p {
+  font-size: 13px;
+  color: var(--text2);
+  letter-spacing: 0.04em;
+}
+
+/* ── TYPE SELECTOR ── */
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 500px) {
+  .type-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.type-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem 0.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.type-card:hover { border-color: var(--border2); background: var(--bg3); }
+
+.type-card.on { border-color: var(--gold); background: var(--gold-bg); }
+
+.type-icon { font-size: 1.5rem; margin-bottom: 6px; display: block; }
+
+.type-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+.type-card.on .type-label { color: var(--gold); }
+
+/* ── MOOD SELECTOR ── */
+.mood-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 500px) {
+  .mood-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.mood-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.875rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.mood-card:hover { border-color: var(--border2); }
+
+.mood-card.on { border-color: var(--gold); background: var(--gold-bg); }
+
+.mood-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+
+.mood-desc {
+  font-size: 10px;
+  color: var(--text3);
+  line-height: 1.4;
+}
+
+.mood-card.on .mood-name { color: var(--gold); }
+
+/* ── INPUTS ── */
+.field { margin-bottom: 1.25rem; }
+
+.field-label {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+textarea {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  line-height: 1.65;
+  padding: 0.875rem 1rem;
+  resize: none;
+  outline: none;
+  transition: border-color 0.12s;
+}
+
+textarea:focus { border-color: var(--gold); }
+textarea::placeholder { color: var(--text3); }
+
+.btn-go {
+  width: 100%;
+  padding: 1rem;
+  background: var(--gold);
+  border: none;
+  border-radius: 4px;
+  color: var(--bg);
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: all 0.15s;
+}
+
+.btn-go:hover { background: var(--gold2); }
+.btn-go:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ── LOADING ── */
+.loading-screen {
+  display: none;
+  min-height: 60vh;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: center;
+  padding: 4rem 1.5rem;
+}
+
+.loading-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 2rem;
+  color: var(--gold);
+  animation: breathe 2s ease-in-out infinite;
+}
+
+@keyframes breathe { 0%,100%{opacity:0.2} 50%{opacity:1} }
+
+.loading-sub {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+
+/* ── RESULTS ── */
+.results-page {
+  display: none;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 1.5rem 6rem;
+}
+
+.results-banner {
+  background: var(--poster-grad);
+  border-bottom: 1px solid var(--border);
+  padding: 3rem 1.5rem 2.5rem;
+  text-align: center;
+  margin: 0 -1.5rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.results-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--grain);
+  pointer-events: none;
+}
+
+.results-banner h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+  position: relative;
+}
+
+.results-meta {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  position: relative;
+}
+
+.results-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 1.5rem;
+}
+
+.rf-pill {
+  padding: 5px 12px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text3);
+  font-size: 11px;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.rf-pill:hover { border-color: var(--border2); color: var(--text2); }
+.rf-pill.on { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
+
+/* ── RESULT CARD ── */
+.rec-list { display: flex; flex-direction: column; gap: 0; }
+
+.rec-item {
+  border-bottom: 1px solid var(--border);
+  padding: 1.375rem 0;
+  cursor: pointer;
+  transition: padding 0.12s;
+}
+
+.rec-item:hover { padding-left: 6px; }
+.rec-item.open { padding-left: 6px; }
+
+.rec-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.rec-left { flex: 1; min-width: 0; }
+
+.rec-number {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  margin-bottom: 2px;
+}
+
+.rec-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+
+.rec-year {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  color: var(--text3);
+  font-style: normal;
+  margin-left: 6px;
+}
+
+.rec-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.rtag {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border: 1px solid;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.rtag-film   { border-color: rgba(200,160,64,0.3);  color: var(--film-c); }
+.rtag-show   { border-color: rgba(72,120,160,0.3);  color: var(--show-c); }
+.rtag-anime  { border-color: rgba(192,80,48,0.3);   color: var(--anime-c); }
+.rtag-book   { border-color: rgba(80,128,96,0.3);   color: var(--book-c); }
+.rtag-mood   { border-color: var(--border); color: var(--text3); }
+.rtag-info   { border-color: var(--border); color: var(--text3); }
+
+.rec-chevron {
+  color: var(--text3);
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+  margin-top: 4px;
+}
+
+.rec-item.open .rec-chevron { transform: rotate(180deg); color: var(--text2); }
+
+.rec-body {
+  display: none;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border);
+}
+
+.rec-item.open .rec-body { display: block; }
+
+.rec-why {
+  font-size: 13.5px;
+  color: var(--text2);
+  line-height: 1.75;
+  margin-bottom: 0.75rem;
+}
+
+.rec-impact-box {
+  padding: 0.625rem 0.875rem;
+  border-left: 2px solid var(--gold);
+  background: var(--gold-bg);
+  border-radius: 0 4px 4px 0;
+}
+
+.rec-impact-label {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 3px;
+}
+
+.rec-impact-text {
+  font-size: 12.5px;
+  font-style: italic;
+  font-family: 'Cormorant Garamond', serif;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+/* ── RESET ── */
+.btn-reset {
+  display: block;
+  margin: 2.5rem auto 0;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  color: var(--text3);
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 10px 28px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.btn-reset:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── FOOTER ── */
+.site-footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-top: 1px solid var(--border);
+  margin-top: 4rem;
+}
+
+.divider-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, var(--border2), transparent);
+  margin: 0 auto 3rem;
+}
+
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0 1.25rem;
+  color: var(--text3);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.section-divider::before, .section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.no-results {
+  text-align: center;
+  padding: 4rem 2rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: var(--text2);
+}
+</style>
+</head>
+<body>
+
+<button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">☀</button>
+
+<!-- ── HERO ── -->
+<section class="hero" id="hero">
+  <div class="hero-lines"></div>
+  <div class="hero-inner">
+    <div class="hero-eyebrow">The honest recommendation engine</div>
+    <h1 class="hero-title">
+      Cine
+      <em>Match</em>
+    </h1>
+    <p class="hero-desc">Not what critics rated. Not what's trending. What a story does to you — how it changes the way you think, feel and see the world.</p>
+    <button class="hero-cta" onclick="scrollToForm()">
+      Find what to watch
+      <span>→</span>
+    </button>
+  </div>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">300+</div>
+      <div class="stat-label">Titles</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">4</div>
+      <div class="stat-label">Categories</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">0</div>
+      <div class="stat-label">Algorithms</div>
+    </div>
+  </div>
+  <div class="hero-scroll">Scroll</div>
+</section>
+
+<!-- ── FORM ── -->
+<section id="form-section">
+  <div class="form-page" id="form-inner">
+    <div class="form-header">
+      <h2>Tell me what you <em>love</em></h2>
+      <p>The more honest you are, the better this works</p>
+    </div>
+
+    <div class="section-divider">Looking for</div>
+    <div class="type-grid">
+      <div class="type-card on" data-g="type" data-v="all" onclick="selectType(this)">
+        <span class="type-icon">✦</span>
+        <span class="type-label">Everything</span>
+      </div>
+      <div class="type-card" data-g="type" data-v="film" onclick="selectType(this)">
+        <span class="type-icon">🎬</span>
+        <span class="type-label">Films</span>
+      </div>
+      <div class="type-card" data-g="type" data-v="show" onclick="selectType(this)">
+        <span class="type-icon">📺</span>
+        <span class="type-label">Shows</span>
+      </div>
+      <div class="type-card" data-g="type" data-v="anime" onclick="selectType(this)">
+        <span class="type-icon">⛩</span>
+        <span class="type-label">Anime</span>
+      </div>
+      <div class="type-card" data-g="type" data-v="book" onclick="selectType(this)">
+        <span class="type-icon">📖</span>
+        <span class="type-label">Books</span>
+      </div>
+    </div>
+
+    <div class="section-divider">Mood</div>
+    <div class="mood-grid">
+      <div class="mood-card on" data-g="mood" data-v="all" onclick="selectMood(this)">
+        <div class="mood-name">Any mood</div>
+        <div class="mood-desc">Show me the best</div>
+      </div>
+      <div class="mood-card" data-g="mood" data-v="heavy" onclick="selectMood(this)">
+        <div class="mood-name">Heavy</div>
+        <div class="mood-desc">Emotionally devastating</div>
+      </div>
+      <div class="mood-card" data-g="mood" data-v="intense" onclick="selectMood(this)">
+        <div class="mood-name">Intense</div>
+        <div class="mood-desc">Gripping, can't stop</div>
+      </div>
+      <div class="mood-card" data-g="mood" data-v="mind" onclick="selectMood(this)">
+        <div class="mood-name">Mind-bending</div>
+        <div class="mood-desc">Complex, philosophical</div>
+      </div>
+      <div class="mood-card" data-g="mood" data-v="human" onclick="selectMood(this)">
+        <div class="mood-name">Human</div>
+        <div class="mood-desc">Warm, deeply real</div>
+      </div>
+      <div class="mood-card" data-g="mood" data-v="comfort" onclick="selectMood(this)">
+        <div class="mood-name">Comfort</div>
+        <div class="mood-desc">Safe, warm, easy</div>
+      </div>
+      <div class="mood-card" data-g="mood" data-v="witty" onclick="selectMood(this)">
+        <div class="mood-name">Witty</div>
+        <div class="mood-desc">Sharp, funny, clever</div>
+      </div>
+      <div class="mood-card" data-g="mood" data-v="thriller" onclick="selectMood(this)">
+        <div class="mood-name">Thriller</div>
+        <div class="mood-desc">Tense, suspenseful</div>
+      </div>
+    </div>
+
+    <div class="section-divider">Your taste</div>
+    <div class="field">
+      <label class="field-label">What you love — titles, themes, directors, anything</label>
+      <textarea id="loves" rows="3" placeholder="e.g. Breaking Bad, The Leftovers, La Haine — I like stories where character decisions feel earned, not forced. Films that trust the audience..."></textarea>
+    </div>
+    <div class="field">
+      <label class="field-label">What to avoid (optional)</label>
+      <textarea id="avoid" rows="2" placeholder="e.g. no superhero stuff, no shows that don't know when to stop, no weak endings..."></textarea>
+    </div>
+
+    <button class="btn-go" onclick="go()">Find my recommendations →</button>
+  </div>
+</section>
+
+<!-- ── LOADING ── -->
+<div class="loading-screen" id="loading">
+  <div class="loading-title" id="loading-word">Searching the vault...</div>
+  <div class="loading-sub" id="loading-sub">Matching your taste</div>
+</div>
+
+<!-- ── RESULTS ── -->
+<div class="results-page" id="results">
+  <div class="results-banner">
+    <h2 id="results-title">Picked for you</h2>
+    <div class="results-meta" id="results-meta"></div>
+  </div>
+
+  <div class="results-filters" id="rf-filters">
+    <button class="rf-pill on" data-rf="all" onclick="filterResults('all', this)">All</button>
+    <button class="rf-pill" data-rf="film" onclick="filterResults('film', this)">Films</button>
+    <button class="rf-pill" data-rf="show" onclick="filterResults('show', this)">Shows</button>
+    <button class="rf-pill" data-rf="anime" onclick="filterResults('anime', this)">Anime</button>
+    <button class="rf-pill" data-rf="book" onclick="filterResults('book', this)">Books</button>
+  </div>
+
+  <div class="rec-list" id="rec-list"></div>
+  <button class="btn-reset" onclick="reset()">← Start over</button>
+</div>
+
+<footer class="site-footer">CineMatch · Honest recommendations · No algorithms, no hype</footer>
+
+<script>
+// ── DATABASE ──
+const DB = [
+  // ── SHOWS ──
+  {title:"The Sopranos",year:"1999",type:"show",mood:["heavy","intense"],tags:["psychology","crime","family","antihero","HBO","New Jersey"],eps:86,rt:"50-75 min",impact:"Changes how you understand human beings who simultaneously love and destroy everything around them.",why:"The most complete human being ever written for television. Tony Soprano is funny, terrifying, vulnerable and monstrous — often in the same scene. David Chase never tells you how to feel about anything for 86 episodes. The grandfather of all prestige television."},
+  {title:"The Wire",year:"2002",type:"show",mood:["heavy","intense"],tags:["crime","institutions","society","politics","Baltimore","HBO"],eps:60,rt:"55-60 min",impact:"After this you will never look at cities, institutions or systems the same way again.",why:"Not about crime. About how systems destroy people. Every character from street dealer to commissioner behaves with complete logical consistency. David Simon based it on real journalism. The greatest sociological portrait ever made for television."},
+  {title:"Breaking Bad",year:"2008",type:"show",mood:["intense","heavy"],tags:["antihero","transformation","crime","chemistry","Albuquerque","AMC"],eps:62,rt:"45-55 min",impact:"Sets the gold standard for earned character transformation — every step logical, every consequence real.",why:"The most disciplined depiction of a man choosing who he wants to be. Vince Gilligan lets the character become the story. Not one decision Walter makes exists for plot convenience alone."},
+  {title:"Better Call Saul",year:"2015",type:"show",mood:["heavy","intense"],tags:["antihero","transformation","crime","law","prequel","AMC"],eps:63,rt:"45-60 min",impact:"Proves a prequel can surpass its source when character is trusted completely.",why:"Jimmy McGill becoming Saul Goodman with even more patience than Breaking Bad. Many argue it surpasses its predecessor. Bob Odenkirk's greatest work. The most precise slow-burn character arc in television."},
+  {title:"The Leftovers",year:"2014",type:"show",mood:["heavy"],tags:["grief","mystery","existential","HBO","philosophical","emotional"],eps:28,rt:"55-65 min",impact:"Permanently changes how you think about grief, meaning and the stories humans construct to survive.",why:"Two percent of the world vanishes. The show is never about the disappearance — it is about how human beings survive unanswerable loss. International Assassin — S2E8 — is one of the greatest single episodes in television history."},
+  {title:"Dark",year:"2017",type:"show",mood:["mind","intense"],tags:["time travel","German","sci-fi","philosophical","complex","Netflix"],eps:26,rt:"45-60 min",impact:"Restructures how you think about cause, effect and whether free will means anything.",why:"The most architecturally ambitious show ever made. A closed causal loop built from human love refusing to accept loss. Every paradox is a precise statement about what grief does across generations."},
+  {title:"Chernobyl",year:"2019",type:"show",mood:["intense","heavy"],tags:["historical","Soviet","HBO","institutions","true story","tragedy"],eps:5,rt:"60-75 min",impact:"Makes you permanently suspicious of institutions that punish honesty and reward obedience.",why:"Five episodes. The most stressful five hours of television — every second earned. Not about nuclear disaster. About what happens when systems are built on lies. Start this tonight."},
+  {title:"Six Feet Under",year:"2001",type:"show",mood:["heavy","human"],tags:["family","death","HBO","psychology","drama","grief"],eps:63,rt:"55-65 min",impact:"The finale alone permanently changes how you think about time, mortality and what a life means.",why:"A family running a funeral home learning to be alive. The greatest series finale ever made — it does something no show before or since has replicated. Do not watch the last ten minutes in public."},
+  {title:"Mad Men",year:"2007",type:"show",mood:["heavy","intense"],tags:["identity","advertising","1960s","antihero","slow burn","AMC"],eps:92,rt:"45-50 min",impact:"Changes how you understand the gap between the person someone performs and who they actually are.",why:"Don Draper is a self-made man whose self is entirely fabricated. The most quietly devastating character study in television. The Suitcase — S4E7 — may be the greatest two-person episode in television history."},
+  {title:"Succession",year:"2018",type:"show",mood:["intense","heavy"],tags:["family","power","media","Shakespearean","dark comedy","HBO"],eps:39,rt:"55-65 min",impact:"Redefines what a family drama looks like when it refuses to sentimentalize anything.",why:"The Roy family fighting over a media empire. Shakespearean in structure. The final season answers every question about these people with complete devastation and complete honesty."},
+  {title:"Fleabag",year:"2016",type:"show",mood:["witty","human","heavy"],tags:["comedy","grief","British","sharp writing","BBC","female protagonist"],eps:12,rt:"25-30 min",impact:"Changes how you think about self-awareness and the gap between what people perform and feel.",why:"Twelve perfect episodes. Phoebe Waller-Bridge wrote every word. The most economical writing on television — nothing wasted. Simultaneously the wittiest and most emotionally devastating show of its era."},
+  {title:"The Americans",year:"2013",type:"show",mood:["intense","heavy"],tags:["spy","Cold War","identity","marriage","slow burn","FX"],eps:75,rt:"45-50 min",impact:"One of the most earned endings in television — every season builds toward a finale that honors everything before it.",why:"Two Soviet spies deep undercover as a suburban American couple. Shows how people rationalize the gap between their values and actions across six completely disciplined seasons. Nothing is wasted."},
+  {title:"Barry",year:"2018",type:"show",mood:["intense","witty"],tags:["dark comedy","hitman","acting","violence","HBO","Bill Hader"],eps:32,rt:"25-35 min",impact:"After this you can never cleanly separate comedy from tragedy again.",why:"A hitman who wants to be an actor. Bill Hader makes you laugh and horrified in the same moment. The violence never lets you feel comfortable laughing. Seasons 1 and 2 are non-negotiable."},
+  {title:"Mr Robot",year:"2015",type:"show",mood:["mind","intense"],tags:["hacking","identity","capitalism","mental illness","tech","thriller"],eps:45,rt:"40-90 min",impact:"Season 1 predicted the next decade of political and technological reality with frightening accuracy.",why:"About identity, capitalism, mental illness and what is real. The direction and sound design are extraordinary. Season 1 alone is essential even if you stop there."},
+  {title:"Severance",year:"2022",type:"show",mood:["mind","intense"],tags:["sci-fi","identity","corporate","mystery","Apple TV","thriller"],eps:19,rt:"40-55 min",impact:"Uses its premise to ask genuine questions about autonomy, identity and what makes a self.",why:"The most disciplined use of a science fiction premise in recent television. Nothing is wasted. If it sticks the landing it enters the all-time conversation."},
+  {title:"Peep Show",year:"2003",type:"show",mood:["witty"],tags:["British","cringe","comedy","internal monologue","psychology","POV"],eps:54,rt:"22-25 min",impact:"After this you will notice your own internal monologue differently — the gap between thought and speech.",why:"Filmed entirely from point of view with access to internal thoughts. Makes you uncomfortably aware of the gap between what people think and say. David Mitchell is extraordinary."},
+  {title:"Bojack Horseman",year:"2014",type:"show",mood:["heavy","witty"],tags:["animation","depression","Hollywood","addiction","Netflix","adult animation"],eps:77,rt:"25-30 min",impact:"People describe this as genuinely therapeutic — being understood by a cartoon horse in ways real people never managed.",why:"The most honest portrayal of depression and self-destruction in any medium. Never lets Bojack off the hook and never lets you off the hook for caring about him. The animation is the point."},
+  {title:"I May Destroy You",year:"2020",type:"show",mood:["heavy","intense"],tags:["trauma","consent","BBC","identity","Michaela Coel","female protagonist"],eps:12,rt:"25-30 min",impact:"Changes how you think about consent, memory, identity and survival.",why:"Michaela Coel wrote, directed and stars in every episode. The most honest television about trauma ever made. The ending is one of the most unusual and completely earned conclusions in recent television."},
+  {title:"Band of Brothers",year:"2001",type:"show",mood:["heavy","intense"],tags:["WWII","war","brotherhood","historical","HBO","true story"],eps:10,rt:"55-72 min",impact:"Changes how you understand human endurance and what people are capable of for each other.",why:"Bastogne — Episode 6 — is one of the greatest single episodes in television history. Almost no dialogue. Just men surviving impossible cold together. Restraint in depicting extreme human experience at its finest."},
+  {title:"The Good Place",year:"2016",type:"show",mood:["comfort","witty","human"],tags:["philosophy","comedy","afterlife","ethics","NBC","feel-good"],eps:53,rt:"20-22 min",impact:"Makes actual moral philosophy — Aristotle, Kant, Scanlon — genuinely fun without dumbing it down.",why:"The only mainstream comedy genuinely engaged with moral philosophy. Eleanor Shellstrop's arc is one of the most honest character transformations in comedy television. The finale answers every question the show asked."},
+  {title:"Ted Lasso",year:"2020",type:"show",mood:["comfort","human"],tags:["football","kindness","Apple TV","feel-good","psychology","warmth"],eps:34,rt:"30-75 min",impact:"Proves that kindness is not naive — it is a conscious daily choice that changes rooms.",why:"Better psychology than most serious dramas. Nate's arc is the most underrated character deconstruction in recent television. Jason Sudeikis wrote from genuine emotional truth about his own life."},
+  {title:"Parks and Recreation",year:"2009",type:"show",mood:["comfort","witty"],tags:["comedy","government","feel-good","ensemble","NBC","workplace"],eps:125,rt:"20-22 min",impact:"Makes optimism feel radical — a woman who chooses to care every day when everyone laughs at it.",why:"The warmest ensemble comedy in American television. Every character grows in logical ways. Skip Season 1 entirely — it finds itself in Season 2 and never looks back."},
+  {title:"The Shield",year:"2002",type:"show",mood:["intense","heavy"],tags:["police","corruption","crime","FX","antihero","LA"],eps:88,rt:"42-45 min",impact:"The finale is one of the greatest character conclusions in television — a man sitting with every choice he ever made.",why:"Vic Mackey is one of the greatest antiheroes ever written. Does the end justify the means? Seven seasons. One devastating answer. The pilot's opening immediately tells you this show will not protect you."},
+  {title:"Oz",year:"1997",type:"show",mood:["heavy","intense"],tags:["prison","HBO","dark","crime","gritty","origin"],eps:56,rt:"55-60 min",impact:"Without Oz there is no Sopranos. Without Sopranos there is no Wire or Breaking Bad.",why:"HBO's first serious drama — morally uncompromising in ways nobody had attempted before. Predates The Sopranos and proves the template was possible. Seasons 1 to 4 are essential television history."},
+  {title:"Sons of Anarchy",year:"2008",type:"show",mood:["intense"],tags:["motorcycle","crime","Hamlet","FX","drama","family"],eps:92,rt:"43-45 min",impact:"Katey Sagal's Gemma is one of the most terrifying and complex maternal figures ever written.",why:"Hamlet set inside a motorcycle club. Seasons 1 and 2 deliver completely. Around Season 4 plot starts driving character but Gemma alone is worth several seasons."},
+  {title:"Rectify",year:"2013",type:"show",mood:["heavy","human"],tags:["death row","redemption","Southern","slow burn","intimate","drama"],eps:30,rt:"44-55 min",impact:"Teaches patience and the value of sitting quietly with another person's pain.",why:"A man released from death row after 19 years trying to remember how to be a person. The most quietly devastating television almost nobody watched. Ends exactly where it should."},
+  {title:"Hannibal",year:"2013",type:"show",mood:["intense","mind"],tags:["thriller","psychological","serial killer","NBC","visual","dark"],eps:39,rt:"42-44 min",impact:"Redefines what psychological horror can look like when treated as pure cinema.",why:"The most visually extraordinary television ever made. Every frame is a painting. Mads Mikkelsen's Lecter is the definitive screen version of the character. Bryan Fuller at his most operatic."},
+  {title:"Haunting of Hill House",year:"2018",type:"show",mood:["heavy","intense"],tags:["horror","family","grief","Netflix","supernatural","drama"],eps:10,rt:"50-75 min",impact:"Proves horror is most effective when the monster is grief itself.",why:"Not about ghosts — about a family haunted by unresolved trauma. The Two Storms — Episode 8 — is one of the most technically ambitious single episodes ever made. Mike Flanagan uses horror to tell a genuinely moving family story."},
+  {title:"Fargo",year:"2014",type:"show",mood:["intense","witty"],tags:["crime","dark comedy","anthology","FX","midwest","Coen Brothers"],eps:51,rt:"44-54 min",impact:"Season 1 is one of the greatest single seasons in television history.",why:"Anthology crime drama inspired by the Coen Brothers. Season 1 with Billy Bob Thornton is extraordinary — Lorne Malvo is one of the most compelling villains ever written. Each season stands completely alone."},
+  {title:"In Treatment",year:"2008",type:"show",mood:["heavy","human"],tags:["therapy","psychology","drama","HBO","intimate","character study"],eps:106,rt:"25-30 min",impact:"The purest psychological character study on television — just human beings trying to understand themselves.",why:"Each episode is one therapy session. You never leave the room. Everything is dialogue, silence and what people cannot bring themselves to say. Essential for anyone who values real psychology."},
+  {title:"Show Me a Hero",year:"2015",type:"show",mood:["heavy","intense"],tags:["political","housing","David Simon","HBO","true story","drama"],eps:6,rt:"55-65 min",impact:"Oscar Isaac's performance is one of the greatest in television history.",why:"Six episodes. The true story of the housing crisis in Yonkers. David Simon. A young mayor's career destroyed by doing the right thing. The human stories of the people affected are what destroy you."},
+  {title:"Detectorists",year:"2014",type:"show",mood:["comfort","human"],tags:["British","gentle","slow","friendship","countryside","quiet"],eps:21,rt:"28-30 min",impact:"Teaches you to find profound meaning in the smallest most ordinary moments.",why:"Two men metal detecting in English countryside. Almost nothing happens. Extraordinarily gentle and human. Settles into you like almost nothing else if you can slow down enough for it."},
+  {title:"Shrinking",year:"2023",type:"show",mood:["comfort","human"],tags:["comedy","therapy","grief","Apple TV","feel-good","Harrison Ford"],eps:22,rt:"30-40 min",impact:"Harrison Ford gives the most unexpectedly warm performance of his late career.",why:"Made by the Ted Lasso team. A grieving therapist being radically honest with his patients. If you loved Ted Lasso's emotional intelligence wrapped in warmth this scratches the same itch."},
+  {title:"Paatal Lok",year:"2020",type:"show",mood:["intense","heavy"],tags:["Indian","crime","society","Amazon","caste","journalism"],eps:18,rt:"35-55 min",impact:"Does for Indian society what The Wire did for Baltimore.",why:"The best Indian show ever made. Uses a crime investigation to expose how class, caste, media and power actually operate. Jaideep Ahlawat's performance is extraordinary."},
+  {title:"What We Do In The Shadows",year:"2019",type:"show",mood:["comfort","witty"],tags:["comedy","vampire","mockumentary","FX","absurd","New Zealand"],eps:60,rt:"22-25 min",impact:"Laszlo Cravensworth is one of the greatest comedic characters in recent television.",why:"Four vampire roommates in Staten Island navigating modern life. Pure comfort. Consistently funny across every season. Requires nothing from you and delivers completely."},
+  {title:"The Bear",year:"2022",type:"show",mood:["intense","human"],tags:["cooking","grief","family","FX","anxiety","drama"],eps:28,rt:"17-61 min",impact:"Every — S2E7 — is one of the greatest single episodes in recent television.",why:"A fine dining chef returning to run his family's sandwich shop after his brother's death. The kitchen is a pressure cooker for grief, ambition and human relationships. Every episode is directed as cinema."},
+  {title:"Curb Your Enthusiasm",year:"2000",type:"show",mood:["witty"],tags:["comedy","Larry David","HBO","social","improvised","observational"],eps:120,rt:"28-35 min",impact:"Changes how you observe social situations — you will start noticing Larry David moments everywhere.",why:"Larry David applying brutal social logic to every human interaction. Largely improvised. The most honest comedy about the social contract and people who break it."},
+  {title:"Arrested Development",year:"2003",type:"show",mood:["witty"],tags:["comedy","family","dense","Fox","callbacks","ensemble"],eps:53,rt:"20-30 min",impact:"Makes you think faster — rewards attention more than almost any comedy ever made.",why:"The most densely constructed comedy ever made. Every joke has three layers and callbacks reward rewatching endlessly. Stop after Season 3."},
+  {title:"Watchmen",year:"2019",type:"show",mood:["mind","intense"],tags:["superhero","race","HBO","alternate history","graphic novel","Damon Lindelof"],eps:9,rt:"50-65 min",impact:"Episode 6 — This Extraordinary Being — is one of the most formally inventive episodes in television history.",why:"Damon Lindelof's continuation of Alan Moore's graphic novel dealing with racism and historical trauma. Regina King is extraordinary. The most ambitious thing American television attempted recently."},
+  {title:"Black Mirror",year:"2011",type:"show",mood:["mind","intense"],tags:["anthology","technology","dark","sci-fi","British","dystopian"],eps:27,rt:"40-90 min",impact:"At its best forces you to think about where technology is already taking us — not in the future but now.",why:"Wildly inconsistent but at its best absolutely extraordinary. White Bear and San Junipero are genuine masterpieces. Treat it as a collection of short films — watch specific episodes, not sequentially."},
+  {title:"Mindhunter",year:"2017",type:"show",mood:["intense","mind"],tags:["FBI","serial killer","psychology","Netflix","Fincher","crime"],eps:19,rt:"45-60 min",impact:"The most methodical and psychologically honest depiction of criminal profiling ever made.",why:"Fincher produced. FBI agents building criminal profiling from scratch. The psychology is completely real and Holden Ford is a fascinating slow burn character study. Cancelled too early."},
+  {title:"Slow Horses",year:"2022",type:"show",mood:["intense","witty"],tags:["spy","British","Gary Oldman","Apple TV","MI5","dark comedy"],eps:24,rt:"40-50 min",impact:"Gary Oldman gives one of the greatest performances of his career as a man who sees everything clearly and pretends not to.",why:"Disgraced MI5 officers running a department for failures. Gary Oldman's Jackson Lamb is simultaneously disgusting, brilliant and the only person in any room who sees everything clearly. Unglamorous and morally precise."},
+  {title:"The Knick",year:"2014",type:"show",mood:["intense","heavy"],tags:["historical","surgery","addiction","Soderbergh","Clive Owen","1900s"],eps:20,rt:"55-60 min",impact:"Soderbergh directed every episode like a feature film — some of the most cinematic television ever made.",why:"1900s surgery, addiction, ambition and moral compromise. Soderbergh directed every episode. Clive Owen is extraordinary. Genuinely cinematic television that treats the medium as seriously as film."},
+  {title:"Halt and Catch Fire",year:"2014",type:"show",mood:["human","heavy"],tags:["tech","1980s","personal computer","AMC","drama","ensemble"],eps:40,rt:"44-48 min",impact:"One of the most emotionally devastating character studies ever made — almost nobody talks about it.",why:"Four people trying to build the personal computer industry in the 1980s. Sounds boring. Is actually one of the most human and devastating shows ever made. The final season is extraordinary."},
+  {title:"Louie",year:"2010",type:"show",mood:["witty","heavy","human"],tags:["comedy","FX","existential","standalone","dark comedy","Louis CK"],eps:61,rt:"20-30 min",impact:"Teaches you to find philosophy and genuine absurdity inside ordinary embarrassing moments.",why:"The most artistically free comedy ever made for American television. Complete creative control. Each episode can be comedy, drama or surrealism. The Budapest arc alone is essential television."},
+  {title:"Twin Peaks",year:"1990",type:"show",mood:["mind"],tags:["David Lynch","mystery","surreal","FBI","Pacific Northwest","dream"],eps:30,rt:"45-50 min",impact:"A dream that knows it is a dream and uses that against you — unlike anything else that has ever been on television.",why:"David Lynch answers to nobody. Agent Dale Cooper is one of the most genuinely original protagonists ever written. The central mystery of Laura Palmer is the most haunting thing in television history. Go in without expectations."},
+  {title:"The Studio",year:"2025",type:"show",mood:["witty","human"],tags:["comedy","Hollywood","Apple TV","Seth Rogen","meta","industry"],eps:10,rt:"30-40 min",impact:"What happens when industry insiders stop pretending everything is fine and start telling the truth about Hollywood.",why:"Seth Rogen plays a film executive whose genuine love for cinema constantly collides with the studio's bottom line. Made by people who genuinely care about film. Every studio head called it traumatically accurate."},
+  {title:"True Detective Season 1",year:"2014",type:"show",mood:["heavy","intense","mind"],tags:["detective","Louisiana","nihilism","McConaughey","HBO","philosophical"],eps:8,rt:"55-60 min",impact:"Rust Cohle's philosophy of pessimism delivered through Matthew McConaughey is one of television's defining performances.",why:"Two detectives across 17 years pursuing a killer in Louisiana. Nic Pizzolatto's writing and Cary Joji Fukunaga's direction create something that feels more like a waking nightmare than a television show. Season 1 only."},
+  {title:"The Penguin",year:"2024",type:"show",mood:["intense","heavy"],tags:["crime","Gotham","HBO","Colin Farrell","villain","origin"],eps:8,rt:"50-60 min",impact:"Colin Farrell disappears so completely into the role it takes twenty minutes to recognize him.",why:"A villain origin story that works because it treats its protagonist as a complete human being with logical motivations rather than a plot device. Colin Farrell's greatest performance. Entirely self-contained."},
+  {title:"Succession",year:"2018",type:"show",mood:["intense","heavy"],tags:["family","power","media","HBO","dark comedy","Shakespearean"],eps:39,rt:"55-65 min",impact:"The most devastating examination of what inherited wealth does to the human capacity for love.",why:"Four people raised by a man who was incapable of love trying to become him or escape him or both simultaneously. Brian Cox and Jeremy Strong are extraordinary. The finale is among the greatest in television history."},
+  {title:"The Leftovers",year:"2014",type:"show",mood:["heavy"],tags:["grief","HBO","supernatural","existential","philosophical","Damon Lindelof"],eps:28,rt:"55-65 min",impact:"The show that taught prestige television what genuine emotional ambiguity looks like.",why:"Damon Lindelof learning from Lost's mistakes and making something that earns its mysteries through emotional truth. The most honest television about grief and unanswerable questions ever made."},
+
+  // ── FILMS ──
+  {title:"No Country for Old Men",year:"2007",type:"film",mood:["heavy","intense"],tags:["Coen Brothers","thriller","fate","Texas","western","Cormac McCarthy"],rt:"122 min",impact:"Anton Chigurh redefines what a villain is — not evil but fate itself made physical.",why:"The Coens trust their audience completely. Chigurh never breaks character once. The coin flip is not about luck — it asks whether you accept your life was always going to end this way. No resolution. No comfort. Perfect."},
+  {title:"Manchester by the Sea",year:"2016",type:"film",mood:["heavy"],tags:["grief","Kenneth Lonergan","family","New England","Oscar","drama"],rt:"137 min",impact:"Changes how you understand grief that never resolves — and how rare that honesty is in cinema.",why:"Lonergan's restraint is brutal. Most films over-explain grief. He lets it sit there uncomfortably. Lee Chandler is one of the most precisely observed broken human beings ever put on screen."},
+  {title:"La Haine",year:"1995",type:"film",mood:["intense","heavy"],tags:["French","social realism","Paris","race","black and white","angry"],rt:"98 min",impact:"One of the most politically honest films ever made — raw, angry, completely uninterested in comforting you.",why:"Three young men in the Paris suburbs after a riot. Raw, politically charged social realism with real rage and intelligence. The ticking clock structure gives it an unbearable urgency. The opposite of comfort cinema."},
+  {title:"Fight Club",year:"1999",type:"film",mood:["intense","mind"],tags:["David Fincher","consumerism","identity","Brad Pitt","twist","dark"],rt:"139 min",impact:"Every single scene holds up on rewatch — the craft underneath is the point, not the twist.",why:"The sound design and subtleness are extraordinary. Worth loving for the texture and craft even if you see the twist coming. Fincher hides information in plain sight from the very first frame."},
+  {title:"The Godfather Part II",year:"1974",type:"film",mood:["heavy","intense"],tags:["Coppola","crime","family","Italian-American","classic","power"],rt:"202 min",impact:"The parallel timeline structure is one of the greatest structural achievements in cinema history.",why:"Preferring Part II over Part I is a taste signal not a cliche. Colder, more fragmented, more melancholic, more structurally ambitious. The final shot of Michael alone is cosmically damning."},
+  {title:"There Will Be Blood",year:"2007",type:"film",mood:["heavy","intense"],tags:["PTA","Daniel Day-Lewis","oil","America","greed","epic"],rt:"158 min",impact:"Daniel Day-Lewis delivers simply the greatest acting performance ever committed to film.",why:"Daniel Plainview's purpose is never stated because he does not fully understand it himself. PTA builds a world so completely you inhabit it without needing explanation. Watch in one unbroken sitting."},
+  {title:"Parasite",year:"2019",type:"film",mood:["intense","mind"],tags:["Korean","Bong Joon-ho","class","thriller","dark comedy","Oscar"],rt:"132 min",impact:"One of the few films that operates as both perfect genre entertainment and devastating social critique simultaneously.",why:"Bong Joon-ho tackles class with surgical precision and genuine ambiguity. Never tells you who to root for completely. The second half recontextualizes everything the first half built. Deserved every award."},
+  {title:"Whiplash",year:"2014",type:"film",mood:["intense"],tags:["music","ambition","jazz","Damien Chazelle","JK Simmons","drums"],rt:"107 min",impact:"Forces the question of whether Fletcher's method is abuse or genius — and refuses to answer cleanly.",why:"Fletcher versus Andrew is one of the greatest two-person dynamics in cinema history. The real question is not whether the method works — it is whether what it produces is greatness or just winning."},
+  {title:"Prisoners",year:"2013",type:"film",mood:["intense","heavy"],tags:["thriller","kidnapping","Hugh Jackman","Denis Villeneuve","mystery","dark"],rt:"153 min",impact:"Hugh Jackman's most underrated performance — a man becoming the very thing he is hunting.",why:"The journey is flawless even if the final note is slightly softer than deserved. A father crossing every moral line he swore he would never cross, step by logical step. Denis Villeneuve before his blockbuster era."},
+  {title:"Burning",year:"2018",type:"film",mood:["mind","heavy"],tags:["Korean","Lee Chang-dong","class","Murakami","mystery","atmospheric"],rt:"148 min",impact:"The most unsettling film about class and disappearance ever made — never explains itself and is more powerful for it.",why:"Based on a Murakami story. Slow atmospheric dread that never fully resolves. Steven Yeun gives a performance of pure contained menace. The long shots of fields burning feel like the subconscious of an entire generation."},
+  {title:"A Separation",year:"2011",type:"film",mood:["heavy","intense"],tags:["Iranian","Asghar Farhadi","family","moral","marriage","divorce"],rt:"123 min",impact:"Every character makes completely logical decisions from their own perspective. There is no villain. There is no hero.",why:"The most morally precise film ever made. An Iranian family in crisis where everyone is right from their own perspective. The ending leaves the most unanswerable question in cinema."},
+  {title:"Mulholland Drive",year:"2001",type:"film",mood:["mind"],tags:["David Lynch","Hollywood","dreams","identity","surrealism","mystery"],rt:"147 min",impact:"One of cinema's greatest pleasures — the theory that completely explains it exists and rewards finding it yourself.",why:"Lynch's masterpiece. Start here for all Lynch. More emotionally coherent than people think once you find the key. Identity, Hollywood and the violence between dreams and reality. One of the greatest films ever made."},
+  {title:"Tokyo Story",year:"1953",type:"film",mood:["human","heavy"],tags:["Ozu","Japanese","family","old age","children","gentle"],rt:"136 min",impact:"The closest cinema has come to simply being alive rather than representing it.",why:"A couple visiting their children in Tokyo. Nothing happens. Everything happens. Ozu's camera never moves. The restraint creates emotional devastation that more dramatic films cannot approach."},
+  {title:"2001: A Space Odyssey",year:"1968",type:"film",mood:["mind"],tags:["Kubrick","sci-fi","consciousness","space","HAL","philosophical"],rt:"149 min",impact:"The only film that asks what humanity itself is — and answers it without a word of explanation.",why:"The match cut from bone to spaceship covers four million years in one frame. Kubrick made a film that is simultaneously a philosophical meditation, a visual poem and a genuinely terrifying horror film. The ending is inexhaustible."},
+  {title:"Yi Yi",year:"2000",type:"film",mood:["human","heavy"],tags:["Edward Yang","Taiwanese","family","life","slow cinema","masterpiece"],rt:"173 min",impact:"Four hours that feel like living an entire life — you emerge from it changed.",why:"Edward Yang. A Taiwanese family across one year. A young boy photographing the backs of people's heads is one of cinema's greatest images. Perfect Days energy but across an entire family across an entire year."},
+  {title:"Grave of the Fireflies",year:"1988",type:"anime",mood:["heavy"],tags:["Studio Ghibli","WWII","Japan","tragedy","siblings","Isao Takahata"],rt:"89 min",impact:"Roger Ebert called it one of the greatest war films ever made — not greatest anime. Greatest war film, full stop.",why:"Two children surviving post-war Japan. No heroes, no villains, no plot — just reality. Makes you forget you are watching animation completely. Plan what you do after watching because you will not be okay."},
+  {title:"Synecdoche New York",year:"2008",type:"film",mood:["mind","heavy"],tags:["Charlie Kaufman","Philip Seymour Hoffman","mortality","art","existential","ambitious"],rt:"124 min",impact:"The most ambitious film about mortality ever made — will break your brain in the best possible way.",why:"Charlie Kaufman's directorial debut. A theater director trying to create a life-size replica of New York while his own life collapses. Philip Seymour Hoffman's greatest performance. Deliberately impossible to fully summarize."},
+  {title:"Cache",year:"2005",type:"film",mood:["mind","heavy"],tags:["Haneke","French","guilt","surveillance","identity","disturbing"],rt:"117 min",impact:"Will make you deeply uncomfortable about complicity in ways you cannot fully articulate afterward.",why:"Michael Haneke. A French family receiving surveillance tapes of themselves. Guilt and complicity made physical. Refuses to explain itself and is more powerful for it."},
+  {title:"Certified Copy",year:"2010",type:"film",mood:["mind","human"],tags:["Kiarostami","Italian","identity","couples","mysterious","Abbas Kiarostami"],rt:"106 min",impact:"Shifts reality under your feet while pretending to be a simple conversation.",why:"Abbas Kiarostami. Identity and relationships with no easy answers. A film that seems simple for thirty minutes and then quietly recontextualizes everything you thought you understood. Among the most intellectually seductive films ever made."},
+  {title:"Perfect Days",year:"2023",type:"film",mood:["human","comfort"],tags:["Wim Wenders","Japanese","routine","Tokyo","quiet","Koji Yakusho"],rt:"124 min",impact:"Changes how you look at ordinary routines — finds transcendence in radical simplicity.",why:"A Tokyo toilet cleaner finding complete meaning in absolute simplicity and daily routine. Nothing happens and everything happens simultaneously. Wim Wenders and Koji Yakusho creating something genuinely gentle and profound."},
+  {title:"Stalker",year:"1979",type:"film",mood:["mind","heavy"],tags:["Tarkovsky","Soviet","philosophical","sci-fi","slow cinema","Zone"],rt:"162 min",impact:"Tarkovsky asked what cinema can do that no other art form can — and this is his fullest answer.",why:"Three men walking toward a room that grants wishes. Virtually nothing happens. Everything is atmosphere and dread and philosophy. The most serious film ever made about hope. Watch only when you have complete silence and complete time."},
+  {title:"Andrei Rublev",year:"1966",type:"film",mood:["heavy","mind"],tags:["Tarkovsky","Soviet","medieval","faith","art","epic"],rt:"205 min",impact:"The most complete statement ever made about the relationship between art, suffering and faith.",why:"Tarkovsky's greatest achievement. A medieval icon painter across episodes of extraordinary brutality and transcendence. About what it means to make art when the world is cruel. Three and a half hours that justify every minute."},
+  {title:"In the Mood for Love",year:"2000",type:"film",mood:["human","heavy"],tags:["Wong Kar-wai","Hong Kong","longing","1960s","restraint","beautiful"],rt:"98 min",impact:"Makes longing visible — the most beautiful film ever made and the most precise about what restraint costs.",why:"Wong Kar-wai. Two neighbors who suspect their spouses are having affairs. They never act on their attraction. The slow motion sequences and the music and the colors create an ache that is almost physical."},
+  {title:"Oldboy",year:"2003",type:"film",mood:["intense","mind"],tags:["Park Chan-wook","Korean","revenge","mystery","dark","thriller"],rt:"120 min",impact:"The most visceral revenge film ever made — the corridor fight alone changed what action cinema could look like.",why:"A man imprisoned for fifteen years without explanation seeks revenge. Park Chan-wook constructs an elaborate mystery that resolves into something genuinely disturbing. One of the most formally brilliant Korean films ever made."},
+  {title:"The Godfather",year:"1972",type:"film",mood:["heavy","intense"],tags:["Coppola","crime","family","Italian-American","classic","Marlon Brando"],rt:"175 min",impact:"The template for every story about power, loyalty and the corruption of good men that followed.",why:"Michael Corleone's transformation from war hero to don is one of the most precisely observed character arcs in cinema. Coppola and Puzo built something so complete it functions as myth. Every scene is a masterclass."},
+  {title:"Chinatown",year:"1974",type:"film",mood:["heavy","intense"],tags:["Polanski","noir","LA","corruption","Jack Nicholson","mystery"],rt:"130 min",impact:"The greatest American film noir — proves that the most disturbing endings are the ones that feel inevitable.",why:"Roman Polanski and Robert Towne. A private detective uncovering corruption in 1930s Los Angeles. The ending is one of the most perfectly constructed and devastating in cinema history. Pure nihilism earned completely."},
+  {title:"Memories of Murder",year:"2003",type:"film",mood:["heavy","intense"],tags:["Bong Joon-ho","Korean","crime","detective","true story","dark"],rt:"132 min",impact:"Bong Joon-ho's best film — the one that showed everything Parasite later proved he could do.",why:"Based on Korea's first serial murder case. Two detectives with completely different methods trying to catch a killer. Funny, devastating and completely precise about the limits of justice. The final shot is one of cinema's greatest."},
+  {title:"The Hunt",year:"2012",type:"film",mood:["heavy","intense"],tags:["Danish","Mads Mikkelsen","false accusation","community","Thomas Vinterberg","devastating"],rt:"115 min",impact:"One of the most stressful films ever made — explores how quickly community trust can turn to mob mentality.",why:"Mads Mikkelsen as a kindergarten teacher falsely accused. Thomas Vinterberg constructs something almost unbearably tense about how a community destroys one of its own. Mikkelsen is extraordinary."},
+  {title:"Requiem for a Dream",year:"2000",type:"film",mood:["heavy","intense"],tags:["Aronofsky","addiction","dreams","Clint Mansell","devastating","dark"],rt:"102 min",impact:"The most visceral depiction of addiction ever made — you feel the deterioration physically.",why:"Darren Aronofsky and Clint Mansell's score create something that operates on pure sensation. Four people destroyed by their dreams and addictions simultaneously. Not comfortable viewing — genuinely useful."},
+  {title:"Blade Runner 2049",year:"2017",type:"film",mood:["mind","heavy"],tags:["Denis Villeneuve","sci-fi","identity","Ryan Gosling","slow","beautiful"],rt:"164 min",impact:"The most patient and philosophically serious blockbuster of the century.",why:"Denis Villeneuve and Roger Deakins creating the most beautiful science fiction film ever made visually. About identity, memory and what makes a self — in complete seriousness. Rewards complete attention."},
+  {title:"Pan's Labyrinth",year:"2006",type:"film",mood:["heavy","intense"],tags:["Guillermo del Toro","Spanish","fantasy","WWII","fairy tale","dark"],rt:"118 min",impact:"Proves fairy tales are the most honest language for processing horror — not escapism but truth.",why:"A young girl in post-Civil War Spain escaping into a fairy tale world. Del Toro keeps both worlds completely real. The question of which world is actually real is never cleanly answered. Devastating and beautiful simultaneously."},
+  {title:"Arrival",year:"2016",type:"film",mood:["mind","heavy"],tags:["Denis Villeneuve","sci-fi","language","Amy Adams","time","emotional"],rt:"116 min",impact:"Reframes how you think about grief and time in a single final revelation.",why:"Denis Villeneuve using a first contact story to explore how language shapes consciousness and time. The emotional reveal in the final act recontextualizes everything. Amy Adams gives one of the great science fiction performances."},
+  {title:"The Pianist",year:"2002",type:"film",mood:["heavy"],tags:["Polanski","WWII","Holocaust","Adrien Brody","survival","historical"],rt:"150 min",impact:"The most honest film about survival — never sentimentalizes, never makes suffering feel meaningful beyond itself.",why:"Roman Polanski documenting the Holocaust through pure observation. Adrien Brody disappears into Szpilman completely. The film's restraint in the face of documented horror is what makes it devastating rather than exploitative."},
+  {title:"Brokeback Mountain",year:"2005",type:"film",mood:["heavy","human"],tags:["Ang Lee","Western","love","Heath Ledger","Jake Gyllenhaal","tragic"],rt:"134 min",impact:"Heath Ledger's performance is the most physically embodied depiction of repressed feeling in cinema.",why:"Ang Lee and Larry McMurtry. Two men who fall in love and cannot be together across decades. Heath Ledger gives a performance of almost unbearable physical restraint. The final scene is one of cinema's most devastating endings."},
+  {title:"The Zone of Interest",year:"2023",type:"film",mood:["heavy","mind"],tags:["Jonathan Glazer","Holocaust","Hannah Arendt","banality","sound design","disturbing"],rt:"105 min",impact:"The banality of evil made unbearably physical through sound alone.",why:"Jonathan Glazer depicting the Auschwitz commandant's family living a normal domestic life next to the camp. You never see the camp. You hear it constantly. The most formally innovative Holocaust film ever made and the most deeply disturbing."},
+  {title:"Three Colors Blue",year:"1993",type:"film",mood:["heavy","human"],tags:["Kieslowski","French","grief","Juliette Binoche","freedom","music"],rt:"98 min",impact:"Kieslowski makes grief visible as a formal property of color and sound — unlike anything else in cinema.",why:"Juliette Binoche as a woman who loses her family in an accident and tries to rebuild herself through freedom. Kieslowski and his cinematographer Piotr Sobocinski use the color blue to make emotional states physically present."},
+  {title:"12 Angry Men",year:"1957",type:"film",mood:["intense","mind"],tags:["Lumet","jury","justice","Henry Fonda","one room","debate"],rt:"96 min",impact:"Proves that a single room and twelve people arguing can be the most gripping drama ever made.",why:"Sidney Lumet. Twelve jurors deciding a murder case in one room in one afternoon. Henry Fonda as the single holdout. A masterclass in how argument and persuasion and prejudice actually work. Perfect at what it attempts."},
+  {title:"Stalker",year:"1979",type:"film",mood:["mind","heavy"],tags:["Tarkovsky","Soviet","philosophical","slow","Zone","existential"],rt:"162 min",impact:"The most serious film about hope ever made.",why:"Three men in the Zone — a forbidden area where a room grants wishes. Virtually nothing happens on the surface. Everything happens underneath. Tarkovsky making cinema do what only cinema can do."},
+  {title:"The Conversation",year:"1974",type:"film",mood:["mind","intense"],tags:["Coppola","surveillance","paranoia","Gene Hackman","privacy","70s"],rt:"113 min",impact:"Predicted modern surveillance anxiety decades before it became our daily reality.",why:"Gene Hackman as a surveillance expert who becomes paranoid he is being surveilled. Coppola at his most precise and unsettling. Made alongside The Godfather — the contrast between the two is remarkable."},
+
+  // ── ANIME ──
+  {title:"Monster",year:"2004",type:"anime",mood:["intense","heavy"],tags:["psychological","thriller","villain","Johan","Naoki Urasawa","74 episodes"],eps:74,rt:"23 min",impact:"Johan Liebert is the most psychologically real villain in anime — never explained, never reduced, never defeated cleanly.",why:"Runs 74 episodes and never cheats once. No supernatural explanation for evil. Just a human being who is genuinely terrifying because every action follows its own horrifying logic. The greatest anime show ever made."},
+  {title:"Vinland Saga",year:"2019",type:"anime",mood:["heavy","intense"],tags:["Viking","pacifism","violence","revenge","historical","Wit Studio"],eps:48,rt:"23 min",impact:"Thorfinn's transformation from revenge to pacifism is one of the greatest character arcs in the medium.",why:"A Viking action show that becomes a meditation on the cycle of violence and whether peace is possible. The Askeladd death redefines what an earned devastating moment looks like. Patient, philosophical and completely uncompromising."},
+  {title:"Cowboy Bebop",year:"1998",type:"anime",mood:["heavy","human"],tags:["jazz","space","bounty hunters","Watanabe","loneliness","episodic"],eps:26,rt:"24 min",impact:"The finale is the anime equivalent of the Six Feet Under ending — inevitable, devastating and completely earned.",why:"The most stylistically perfect anime ever made. Every episode feels like a short film. About loneliness and running from your past. Spike Spiegel walking up those stairs at the end is one of anime's defining images."},
+  {title:"Neon Genesis Evangelion",year:"1995",type:"anime",mood:["mind","heavy"],tags:["mecha","psychological","Anno","depression","identity","controversial"],eps:26,rt:"23 min",impact:"Made while Anno was genuinely depressed — that authenticity is present in every frame.",why:"A mecha show that becomes a complete psychological breakdown about identity, loneliness and the terror of human connection. Hideaki Anno made something where the genre is a Trojan horse for an honest portrait of depression."},
+  {title:"Fullmetal Alchemist Brotherhood",year:"2009",type:"anime",mood:["intense","human"],tags:["alchemy","brothers","complete","action","philosophy","moral"],eps:64,rt:"24 min",impact:"The most perfectly constructed long-form anime narrative — beginning, middle and end all completely earned.",why:"Edward Elric's journey never cheats once. The most complete anime narrative ever made. Every theme introduced is paid off completely. Brotherhood earns its emotional moments by building toward them meticulously."},
+  {title:"Steins;Gate",year:"2011",type:"anime",mood:["mind","intense"],tags:["time travel","emotional","sci-fi","thriller","slow burn","Okabe"],eps:24,rt:"24 min",impact:"The second half devastates in direct proportion to how much the first half made you care.",why:"Time travel done with genuine emotional intelligence. The first half is slow and deliberately comedic. Then it pivots and uses everything it built to destroy you. Trust the process completely."},
+  {title:"Ping Pong the Animation",year:"2014",type:"anime",mood:["human","intense"],tags:["sports","identity","Masaaki Yuasa","short","unique animation","purpose"],eps:11,rt:"22 min",impact:"Changes how you think about talent, purpose and what it means to find what you were made for.",why:"Eleven episodes. Sports anime on the surface, actually about identity and finding your purpose. Masaaki Yuasa's animation style is completely unique. Trust this one completely even if it looks strange at first."},
+  {title:"Mushishi",year:"2005",type:"anime",mood:["comfort","human"],tags:["episodic","gentle","nature","spirits","atmospheric","quiet"],eps:46,rt:"23 min",impact:"The best palate cleanser in anime — resets your relationship with slow beauty and quiet meaning.",why:"Episodic, gentle, melancholic, extraordinarily beautiful. A wandering doctor treating ailments caused by primordial spirits. Nothing happens and everything happens simultaneously. Perfect comfort anime for people with serious taste."},
+  {title:"Berserk",year:"1997",type:"anime",mood:["heavy","intense"],tags:["dark fantasy","betrayal","Griffith","Guts","friendship","tragedy"],eps:25,rt:"23 min",impact:"The Griffith and Guts dynamic is one of the greatest friendships and betrayals in any medium.",why:"A mercenary and his complicated bond with a genius commander. What happens at the end will stay with you forever. The original 1997 adaptation only — not the CGI versions. Earned darkness at its most precise."},
+  {title:"Rainbow",year:"2010",type:"anime",mood:["heavy","human"],tags:["prison","friendship","1950s","survival","brotherhood","underseen"],eps:26,rt:"23 min",impact:"Brotherhood and survival done with complete authenticity — almost nobody talks about this show.",why:"Six boys in 1950s Japanese juvenile detention. Brutal, warm, devastating. One of the most underseen anime ever made. The friendship between the seven boys is among the most genuinely moving relationships in the medium."},
+  {title:"Nana",year:"2006",type:"anime",mood:["heavy","human"],tags:["music","friendship","love","adult","emotional","josei"],eps:47,rt:"23 min",impact:"The most emotionally honest anime about adult relationships, love and the cost of ambition.",why:"Two girls named Nana navigating music, love and loss together. Treats adult relationships with complete emotional honesty in ways almost no anime does. One of the great friendship stories in the medium."},
+  {title:"Attack on Titan",year:"2013",type:"anime",mood:["intense","heavy"],tags:["Titan","Eren","war","freedom","genocide","cycle of hatred"],eps:94,rt:"23-87 min",impact:"One of the most ambitious narrative architectures in anime — the premise inverts itself completely.",why:"What starts as a monster show becomes a story about the cycle of hatred, genocide and whether freedom is possible. Eren Yeager is one of the most complex protagonists in modern storytelling. The concept is masterpiece level."},
+  {title:"Legend of the Galactic Heroes",year:"1988",type:"anime",mood:["mind","heavy"],tags:["space opera","political","democracy","war","110 episodes","Tolstoy"],eps:110,rt:"26 min",impact:"Tolstoy-level political and philosophical ambition in anime form — nothing else in the medium matches its scope.",why:"Space opera that is really a profound meditation on democracy versus autocracy, war and leadership. 110 episodes of sustained intellectual seriousness. The most ambitious anime ever made by a significant distance."},
+  {title:"March Comes in Like a Lion",year:"2016",type:"anime",mood:["heavy","human"],tags:["shogi","depression","family","Shaft","mental health","quiet"],eps:44,rt:"23 min",impact:"The most precise and compassionate anime portrayal of depression and slowly finding human connection.",why:"A professional shogi player dealing with depression and loneliness. SHAFT studio. Extraordinarily beautiful and honest about mental health. The found family that develops around Rei is one of the warmest things in anime."},
+  {title:"Tatami Galaxy",year:"2010",type:"anime",mood:["mind","witty"],tags:["university","existential","Masaaki Yuasa","comedy","loop","identity"],eps:11,rt:"24 min",impact:"Makes the case that the perfect life you imagine is less important than the life you actually have.",why:"A university student reliving the same two years trying to find the perfect rose-colored campus life. Masaaki Yuasa again. Existential and funny and completely original. One of the most purely enjoyable mind-bending anime ever made."},
+  {title:"Banana Fish",year:"2018",type:"anime",mood:["heavy","intense"],tags:["crime","trauma","New York","friendship","brutal","emotional"],eps:24,rt:"23 min",impact:"One of the most intense and devastating relationships in anime — friendship that costs everything.",why:"A street gang leader in New York uncovering a dangerous conspiracy. Brutal, emotional and completely devastating. One of the great tragic relationships in the medium. Not for the faint hearted but extraordinarily well written."},
+  {title:"Fruits Basket",year:"2019",type:"anime",mood:["comfort","human"],tags:["zodiac","family","trauma","healing","shojo","found family"],eps:63,rt:"23 min",impact:"The most compassionate anime treatment of trauma, family damage and finding your own worth.",why:"A girl who moves in with the Sohma family discovers their curse. Beneath the comfort and gentle tone is genuinely thoughtful treatment of generational trauma, self-worth and found family. Similar emotional register to Ted Lasso."},
+  {title:"Grave of the Fireflies",year:"1988",type:"anime",mood:["heavy"],tags:["Studio Ghibli","WWII","Japan","tragedy","siblings","Isao Takahata"],rt:"89 min",impact:"Roger Ebert called it one of the greatest war films ever made — not greatest anime. Greatest war film.",why:"Two children surviving post-war Japan. No heroes, no villains, no plot — just reality. Makes you forget you are watching animation completely. Plan what you do after watching because you will not be okay."},
+  {title:"Kids on the Slope",year:"2012",type:"anime",mood:["human","comfort"],tags:["jazz","1960s Japan","friendship","music","Watanabe","warm"],eps:12,rt:"22 min",impact:"Music as the language of friendship — warm, bittersweet and completely human.",why:"Shinichiro Watanabe again. Two boys bonding over jazz in 1960s Japan. Warm and bittersweet. Every friendship dynamic is observed with complete honesty. One of the most purely enjoyable anime about genuine human connection."},
+
+  // ── BOOKS ──
+  {title:"No Longer Human",year:"1948",type:"book",mood:["heavy"],tags:["Japanese","Dazai","confession","psychology","isolation","short"],impact:"Being understood by a book in ways real people never managed.",why:"Osamu Dazai. Under 200 pages. A man documenting his own psychological disintegration. Reads like someone handing you their private journals. The best re-entry point into serious literature for anyone drawn to honest psychological portraiture."},
+  {title:"The Stranger",year:"1942",type:"book",mood:["heavy","mind"],tags:["Camus","French","existential","short","absurdism","philosophy"],impact:"Changes how you think about what society demands from people — and what happens when someone refuses to perform.",why:"Meursault is one of the most fascinating protagonists in literature. A man who feels nothing at his mother's funeral commits a crime and cannot explain why. Under 150 pages. The psychology is disturbing and completely honest."},
+  {title:"Crime and Punishment",year:"1866",type:"book",mood:["heavy","intense"],tags:["Dostoevsky","Russian","psychology","guilt","murder","antihero"],impact:"Raskolnikov is Walter White before Walter White existed — the original antihero destroyed by his own justifications.",why:"A man who commits a crime based on a philosophical justification and is psychologically destroyed by his own conscience. Dostoevsky invented the character type that gave you every antihero you love in television."},
+  {title:"Norwegian Wood",year:"1987",type:"book",mood:["heavy","human"],tags:["Murakami","Japanese","grief","1960s","atmospheric","love"],impact:"Atmospheric the same way Wong Kar-wai films are — longing made visible through precise restraint.",why:"Grief, memory and longing in 1960s Tokyo. Murakami writes with the same atmospheric quality you find in the best slow cinema. His most accessible and emotionally direct novel. Once you finish this you will want everything he wrote."},
+  {title:"The Remains of the Day",year:"1989",type:"book",mood:["heavy","human"],tags:["Ishiguro","British","regret","identity","restraint","subtle"],impact:"The most devastating thing about it is what the narrator refuses to say — the silences carry more weight than the words.",why:"An English butler reflecting on his life and the choices he made. Ishiguro writes restraint like nobody else. The entire tragedy accumulates in what Stevens cannot bring himself to acknowledge."},
+  {title:"The Count of Monte Cristo",year:"1844",type:"book",mood:["intense","human"],tags:["Dumas","revenge","betrayal","transformation","classic","epic"],impact:"The book most likely to rebuild a dormant reading habit through pure compulsion.",why:"Betrayal, imprisonment, transformation and elaborate revenge executed with surgical precision. Reads like the best prestige television you have ever watched. Dumas wrote it as a serial — each installment designed to make you desperate for the next."},
+  {title:"Anna Karenina",year:"1878",type:"book",mood:["heavy","human"],tags:["Tolstoy","Russian","marriage","society","fate","classic"],impact:"Every character's fate emerges completely from their own nature — your golden rule applied across 800 pages.",why:"Not a love story despite the reputation. A precise sociological and psychological portrait of Russian society where nobody's fate is imposed from outside — it grows organically from who they are."},
+  {title:"The Brothers Karamazov",year:"1880",type:"book",mood:["heavy","mind"],tags:["Dostoevsky","Russian","God","murder","family","philosophy"],impact:"The Grand Inquisitor chapter is the greatest single chapter in literature — it will make you sit still for an hour.",why:"Three brothers, a murder, God, free will and moral responsibility. Dostoevsky's greatest achievement. The Grand Inquisitor alone justifies the whole book. Everything about good, evil and freedom argued at the highest possible level."},
+  {title:"Metamorphosis",year:"1915",type:"book",mood:["mind","heavy"],tags:["Kafka","German","absurd","family","short","existential"],impact:"One of the most precise things ever written about how human beings abandon each other when inconvenienced.",why:"70 pages. A man wakes as a giant insect and his family's reaction is devastating in its complete ordinariness. Kafka says more about human nature in 70 pages than most novels manage in 400."},
+  {title:"Of Mice and Men",year:"1937",type:"book",mood:["heavy","human"],tags:["Steinbeck","American","friendship","dream","short","tragedy"],impact:"The ending is one of the most devastating in American literature — completely earned through character truth.",why:"Under 200 pages. Two men dreaming of a better life. Steinbeck at his most direct and most precise. The ending honors everything that came before it with devastating completeness."},
+  {title:"Flowers for Algernon",year:"1966",type:"book",mood:["heavy","human"],tags:["Daniel Keyes","intelligence","disability","science","emotional","classic"],impact:"One of the few science fiction concepts that operates as pure tragedy — the most affecting exploration of what intelligence costs.",why:"A man with an intellectual disability undergoes an operation that dramatically increases his intelligence. Daniel Keyes tells it through journal entries. The structure itself is the tragedy. Among the most emotionally effective novels ever written."},
+  {title:"All Quiet on the Western Front",year:"1929",type:"book",mood:["heavy","intense"],tags:["Remarque","WWI","war","youth","German","anti-war"],impact:"The most honest anti-war novel ever written — makes the waste of young men feel personal rather than statistical.",why:"A young German soldier's experience in WWI told with complete documentary honesty. Erich Maria Remarque wrote from experience. No heroism, no glory — just the destruction of an entire generation's capacity to live normally."},
+  {title:"Never Let Me Go",year:"2005",type:"book",mood:["heavy","human"],tags:["Ishiguro","dystopian","love","mortality","quiet","devastating"],impact:"The quietest dystopia ever written — devastating because it never raises its voice.",why:"Kazuo Ishiguro again. A group of children at an English boarding school who slowly understand their fate. The most gentle and devastating exploration of mortality and acceptance in modern fiction. The restraint is unbearable."},
+  {title:"Kafka on the Shore",year:"2002",type:"book",mood:["mind","human"],tags:["Murakami","Japanese","surreal","identity","cats","philosophical"],impact:"Murakami at his most ambitious — two parallel stories that should not connect but resonate against each other perfectly.",why:"Two parallel stories — a teenage runaway and an old man who can talk to cats — that weave together through pure atmospheric resonance. Murakami's most ambitious novel and the best entry point to his stranger work."},
+  {title:"Invisible Man",year:"1952",type:"book",mood:["heavy","intense"],tags:["Ralph Ellison","race","identity","American","jazz","satire"],impact:"One of the greatest American novels — the most precise account of what racial invisibility actually feels like from inside.",why:"Ralph Ellison's only novel. A Black man navigating America while being simultaneously hyper-visible and invisible. Dense, funny, heartbreaking and structurally brilliant. Among the most important American books of the 20th century."},
+  {title:"The Trial",year:"1925",type:"book",mood:["mind","heavy"],tags:["Kafka","German","bureaucracy","absurd","Josef K","existential"],impact:"Predicts the administrative horror of modern bureaucracy with disturbing precision.",why:"Josef K is arrested one morning and never told why. The entire novel is his attempt to navigate a system that refuses to explain itself. Kafka making the absurdity of authority feel genuinely terrifying rather than merely comedic."},
+  {title:"Siddhartha",year:"1922",type:"book",mood:["human","mind"],tags:["Hesse","Indian","spiritual","philosophy","Buddhism","journey"],impact:"One of the most persuasive arguments for finding your own path rather than following someone else's.",why:"Hermann Hesse. A young Indian man searching for spiritual truth. Short, clean and quietly profound. One of the few philosophical novels that never feels like homework. The ending is earned through the entire journey that precedes it."},
+  {title:"The Road",year:"2006",type:"book",mood:["heavy"],tags:["Cormac McCarthy","post-apocalyptic","father","son","survival","bleak"],impact:"The most devastating examination of parental love — what you are willing to do and become to protect a child.",why:"A father and son crossing a devastated America. Cormac McCarthy writing with complete and uncompromising darkness. The prose strips everything to the most essential syllables. The love between the father and son is the only light in the book."},
+  {title:"Stoner",year:"1965",type:"book",mood:["heavy","human"],tags:["John Williams","American","quiet life","academia","tragedy","underseen"],impact:"The most precise novel about an ordinary life lived with quiet dignity — devastating in its complete honesty.",why:"A Missouri farm boy becomes an English professor. Nothing dramatic happens across his entire life. John Williams finding profound meaning in a life that would not be called successful by any conventional measure. One of the most moving novels ever written."},
+  {title:"Giovanni's Room",year:"1956",type:"book",mood:["heavy","human"],tags:["James Baldwin","Paris","identity","sexuality","American","tragic"],impact:"James Baldwin writing about love, shame and identity with the most precise and painful honesty.",why:"An American in Paris in the 1950s. Short. James Baldwin at his most direct about shame, desire and self-deception. The prose is extraordinary. One of the most emotionally precise novels about what self-denial costs a person."},
+  {title:"The Bell Jar",year:"1963",type:"book",mood:["heavy"],tags:["Sylvia Plath","depression","1950s","woman","autobiography","mental health"],impact:"The most honest first-person account of depression ever written — feels less like fiction and more like direct transmission.",why:"Sylvia Plath writing as autobiography essentially. Esther Greenwood's psychological unraveling in 1950s America is written with such precise honesty it remains the most direct literary account of what depression actually feels like."},
+];
+
+// ── STATE ──
+const sel = { type: "all", mood: "all" };
+let allResults = [];
+let activeRF = "all";
+
+// ── THEME ──
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.querySelector('.theme-btn').textContent = isDark ? '☽' : '☀';
+}
+
+// ── SCROLL ──
+function scrollToForm() {
+  document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── SELECTORS ──
+function selectType(el) {
+  document.querySelectorAll('[data-g="type"]').forEach(x => x.classList.remove('on'));
+  el.classList.add('on');
+  sel.type = el.dataset.v;
+}
+
+function selectMood(el) {
+  document.querySelectorAll('[data-g="mood"]').forEach(x => x.classList.remove('on'));
+  el.classList.add('on');
+  sel.mood = el.dataset.v;
+}
+
+// ── SCORING ──
+function score(item, loves, avoid) {
+  let s = 0;
+  const lLow = loves.toLowerCase();
+  const aLow = avoid.toLowerCase();
+
+  if (aLow) {
+    const avoidWords = aLow.split(/[\s,]+/).filter(w => w.length > 2);
+    for (const w of avoidWords) {
+      if (item.title.toLowerCase().includes(w)) return -999;
+      if (item.tags.some(t => t.toLowerCase().includes(w))) return -999;
+    }
+  }
+
+  if (!lLow) return Math.random() * 4;
+
+  const words = lLow.split(/[\s,]+/).filter(w => w.length > 2);
+  for (const w of words) {
+    if (item.title.toLowerCase().includes(w)) s += 25;
+    if (item.tags.some(t => t.toLowerCase().includes(w))) s += 10;
+    if (item.why.toLowerCase().includes(w)) s += 5;
+    if (item.impact && item.impact.toLowerCase().includes(w)) s += 4;
+  }
+
+  // Mood inference from keywords
+  const moodMap = {
+    "breaking bad":["intense","heavy"], sopranos:["heavy","intense"], wire:["heavy","intense"],
+    leftovers:["heavy"], dark:["mind","intense"], haine:["intense","heavy"],
+    manchester:["heavy"], "fight club":["intense","mind"], parasite:["intense"],
+    lasso:["comfort","human"], funny:["witty","comfort"], comedy:["witty","comfort"],
+    psychological:["heavy","intense","mind"], philosophy:["mind","heavy"],
+    thriller:["intense","thriller"], horror:["heavy","intense"], anime:["intense"],
+    slow:["human","heavy"], gentle:["comfort","human"], warm:["comfort","human"],
+    witty:["witty"], sharp:["witty"], clever:["witty","mind"], "feel good":["comfort","human"],
+    sad:["heavy"], devastating:["heavy"], complex:["mind"], surreal:["mind"],
+    "true detective":["heavy","intense","mind"], hannibal:["intense","mind"],
+    "twin peaks":["mind"], "mr robot":["mind","intense"],
+  };
+
+  for (const [kw, moods] of Object.entries(moodMap)) {
+    if (lLow.includes(kw) && item.mood.some(m => moods.includes(m))) s += 8;
+  }
+
+  return s + Math.random() * 3;
+}
+
+// ── LOADING ──
+const loadPhrases = [
+  "Searching the vault...",
+  "Matching your taste...",
+  "Ignoring the algorithm...",
+  "Finding what matters...",
+  "Almost there..."
+];
+let lInt, lpi = 0;
+
+// ── GO ──
+function go() {
+  const loves = document.getElementById('loves').value.trim();
+  const avoid = document.getElementById('avoid').value.trim();
+
+  document.getElementById('form-section').style.display = 'none';
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('results').style.display = 'none';
+
+  lpi = 0;
+  const lw = document.getElementById('loading-word');
+  lw.textContent = loadPhrases[0];
+  lInt = setInterval(() => {
+    lpi = (lpi + 1) % loadPhrases.length;
+    lw.textContent = loadPhrases[lpi];
+  }, 900);
+
+  setTimeout(() => {
+    clearInterval(lInt);
+    document.getElementById('loading').style.display = 'none';
+
+    let pool = DB.filter(item => {
+      const typeOk = sel.type === 'all' || item.type === sel.type;
+      const moodOk = sel.mood === 'all' || item.mood.includes(sel.mood);
+      return typeOk && moodOk;
+    });
+
+    allResults = pool
+      .map(item => ({ item, s: score(item, loves, avoid) }))
+      .filter(x => x.s > -999)
+      .sort((a, b) => b.s - a.s)
+      .slice(0, 10)
+      .map(x => x.item);
+
+    if (!allResults.length) {
+      document.getElementById('rec-list').innerHTML = '<div class="no-results">Nothing matched — try different filters or describe your taste differently.</div>';
+    } else {
+      renderResults(allResults);
+    }
+
+    document.getElementById('results-title').textContent = 'Picked for you';
+    document.getElementById('results-meta').textContent = allResults.length + ' recommendations · tap any card to expand';
+    document.getElementById('results').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    activeRF = 'all';
+    document.querySelectorAll('.rf-pill').forEach(p => p.classList.remove('on'));
+    document.querySelector('[data-rf="all"]').classList.add('on');
+  }, 1800);
+}
+
+// ── RENDER ──
+function renderResults(items) {
+  const moodLabel = { heavy:'heavy', intense:'intense', mind:'mind-bending', human:'human', comfort:'comfort', witty:'witty', thriller:'thriller' };
+
+  document.getElementById('rec-list').innerHTML = items.map((r, i) => `
+    <div class="rec-item" id="ri${i}" onclick="this.classList.toggle('open')">
+      <div class="rec-row">
+        <div class="rec-left">
+          <div class="rec-number">${String(i+1).padStart(2,'0')}</div>
+          <div class="rec-title">${r.title} <span class="rec-year">${r.year}</span></div>
+          <div class="rec-tags">
+            <span class="rtag rtag-${r.type}">${r.type}</span>
+            ${r.mood.slice(0,2).map(m => `<span class="rtag rtag-mood">${moodLabel[m]||m}</span>`).join('')}
+            ${r.eps ? `<span class="rtag rtag-info">${r.eps} eps · ${r.rt}</span>` : `<span class="rtag rtag-info">${r.rt}</span>`}
+          </div>
+        </div>
+        <div class="rec-chevron">▾</div>
+      </div>
+      <div class="rec-body">
+        <div class="rec-why">${r.why}</div>
+        ${r.impact ? `<div class="rec-impact-box"><div class="rec-impact-label">What it does to you</div><div class="rec-impact-text">${r.impact}</div></div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── FILTER RESULTS ──
+function filterResults(type, el) {
+  document.querySelectorAll('.rf-pill').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+  activeRF = type;
+
+  const filtered = type === 'all' ? allResults : allResults.filter(r => r.type === type);
+  if (!filtered.length) {
+    document.getElementById('rec-list').innerHTML = '<div class="no-results">No ' + type + 's in these results — try searching again with that type selected.</div>';
+  } else {
+    renderResults(filtered);
+  }
+}
+
+// ── RESET ──
+function reset() {
+  document.getElementById('form-section').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('loves').value = '';
+  document.getElementById('avoid').value = '';
+  document.querySelectorAll('[data-g="type"]').forEach(x => x.classList.remove('on'));
+  document.querySelectorAll('[data-g="mood"]').forEach(x => x.classList.remove('on'));
+  document.querySelector('[data-g="type"][data-v="all"]').classList.add('on');
+  document.querySelector('[data-g="mood"][data-v="all"]').classList.add('on');
+  sel.type = 'all'; sel.mood = 'all';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
