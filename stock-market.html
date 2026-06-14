@@ -1,115 +1,63 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Indian Stock Market Hub</title>
+<title>Pro Stock Market Dashboard</title>
 
 <style>
 :root{
---bg:#0f172a;
---card:#1e293b;
---header:#111827;
---text:#f8fafc;
+--bg:#0b1220;
+--card:#121a2b;
+--text:#e5e7eb;
 --green:#22c55e;
 --red:#ef4444;
 --blue:#3b82f6;
+--muted:#94a3b8;
 }
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Segoe UI,Arial,sans-serif;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
 
-body{
-background:var(--bg);
-color:var(--text);
-}
+body{background:var(--bg);color:var(--text);}
 
 header{
-background:var(--header);
-padding:25px;
+padding:20px;
 text-align:center;
+background:#0f172a;
 position:sticky;
 top:0;
-z-index:100;
+z-index:10;
+border-bottom:1px solid #1f2937;
 }
 
-header h1{
-margin-bottom:8px;
-}
+h1{font-size:22px;}
 
-nav{
-display:flex;
-justify-content:center;
-flex-wrap:wrap;
-gap:15px;
-margin-top:10px;
-}
+.container{max-width:1200px;margin:auto;padding:20px;}
 
-nav a{
-color:white;
-text-decoration:none;
-padding:8px 14px;
-border-radius:8px;
-background:#243041;
-}
-
-.container{
-max-width:1400px;
-margin:auto;
-padding:20px;
-}
-
-.section{
-margin-top:40px;
-}
-
-.cards{
+.grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:20px;
+gap:15px;
 margin-top:20px;
 }
 
 .card{
 background:var(--card);
-padding:20px;
-border-radius:15px;
-box-shadow:0 0 10px rgba(0,0,0,.2);
-}
-
-.green{color:var(--green);}
-.red{color:var(--red);}
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:15px;
-background:var(--card);
-border-radius:10px;
-overflow:hidden;
-}
-
-th,td{
-padding:12px;
-border-bottom:1px solid #334155;
-text-align:left;
+padding:15px;
+border-radius:12px;
+border:1px solid #1f2937;
 }
 
 input,button{
-padding:12px;
-border:none;
+padding:10px;
 border-radius:8px;
+border:none;
 margin-top:10px;
 }
 
 input{
 width:70%;
-background:#111827;
+background:#0f172a;
 color:white;
 }
 
@@ -119,249 +67,149 @@ color:white;
 cursor:pointer;
 }
 
-.watchlist-item{
-padding:10px;
-margin-top:8px;
-background:#243041;
+.small{color:var(--muted);font-size:13px;}
+
+.green{color:var(--green);}
+.red{color:var(--red);}
+
+.list div{
+padding:8px;
+margin-top:6px;
+background:#0f172a;
 border-radius:8px;
 }
 
-.news-item{
-padding:10px;
-margin-top:10px;
-background:#243041;
-border-radius:8px;
+.news{
+font-size:14px;
+line-height:1.5;
 }
 
-footer{
-margin-top:50px;
-padding:25px;
-text-align:center;
-background:var(--header);
-}
-
-@media(max-width:700px){
-input{
-width:100%;
-}
-}
 </style>
-
 </head>
 
 <body>
 
 <header>
-<h1>📈 Indian Stock Market Hub</h1>
-<p>NIFTY • SENSEX • Watchlist • Screener • Learning</p>
-
-<nav>
-<a href="#overview">Overview</a>
-<a href="#gainers">Gainers</a>
-<a href="#sectors">Sectors</a>
-<a href="#news">News</a>
-<a href="#watchlist">Watchlist</a>
-<a href="#screener">Screener</a>
-<a href="#learn">Learn</a>
-</nav>
+<h1>📊 PRO STOCK MARKET DASHBOARD</h1>
+<div class="small">Live Stocks • Watchlist • News • Analytics</div>
 </header>
 
 <div class="container">
 
-<section id="overview" class="section">
-<h2>Market Overview</h2>
-
-<div class="cards">
-
+<!-- MARKET CARDS -->
+<div class="grid">
 <div class="card">
-<h3>NIFTY 50</h3>
-<h1 id="nifty">24,850</h1>
-<p class="green">+0.57%</p>
+<h3>NIFTY (simulated index)</h3>
+<h2 id="nifty">Loading...</h2>
 </div>
 
 <div class="card">
-<h3>SENSEX</h3>
-<h1 id="sensex">81,750</h1>
-<p class="green">+0.44%</p>
+<h3>SENSEX (simulated index)</h3>
+<h2 id="sensex">Loading...</h2>
 </div>
 
 <div class="card">
-<h3>BANK NIFTY</h3>
-<h1 id="banknifty">55,210</h1>
-<p class="red">-0.17%</p>
+<h3>Market Status</h3>
+<h2 id="status">Analyzing...</h2>
+</div>
 </div>
 
-<div class="card">
-<h3>Market Mood</h3>
-<h1 id="mood">Bullish 🐂</h1>
+<!-- STOCK SEARCH -->
+<div class="card" style="margin-top:20px;">
+<h3>🔎 Live Stock Search</h3>
+<input id="symbol" placeholder="Enter symbol (IBM, TCS, INFY)">
+<button onclick="fetchStock()">Search</button>
+
+<div id="result" style="margin-top:10px;"></div>
 </div>
 
-</div>
-</section>
-
-<section id="gainers" class="section">
-<h2>Top Gainers & Losers</h2>
-
-<table>
-<tr>
-<th>Stock</th>
-<th>Change</th>
-</tr>
-
-<tr>
-<td>Reliance</td>
-<td class="green">+4.5%</td>
-</tr>
-
-<tr>
-<td>TCS</td>
-<td class="green">+3.2%</td>
-</tr>
-
-<tr>
-<td>Infosys</td>
-<td class="red">-2.8%</td>
-</tr>
-
-<tr>
-<td>HDFC Bank</td>
-<td class="red">-1.9%</td>
-</tr>
-</table>
-</section>
-
-<section id="sectors" class="section">
-<h2>Sector Performance</h2>
-
-<div class="cards">
-<div class="card">IT Sector +2.4%</div>
-<div class="card">Banking +1.2%</div>
-<div class="card">Pharma +0.8%</div>
-<div class="card">Auto -0.5%</div>
-<div class="card">Energy +1.4%</div>
-<div class="card">FMCG +0.9%</div>
-</div>
-</section>
-
-<section id="news" class="section">
-<h2>Market News</h2>
-
-<div class="news-item">Markets close higher amid strong buying.</div>
-<div class="news-item">IT sector leads today's rally.</div>
-<div class="news-item">Foreign investors continue inflows.</div>
-<div class="news-item">RBI policy meeting expected next week.</div>
-</section>
-
-<section id="watchlist" class="section">
-<h2>Watchlist</h2>
-
-<input type="text" id="stockInput" placeholder="Add stock name">
-<button onclick="addStock()">Add</button>
-
-<div id="watchlistContainer"></div>
-</section>
-
-<section id="screener" class="section">
-<h2>Stock Screener</h2>
-
-<input type="text" id="searchBox" placeholder="Search stock">
-
-<div class="cards" id="stockCards">
-
-<div class="card stock">Reliance Industries</div>
-<div class="card stock">TCS</div>
-<div class="card stock">Infosys</div>
-<div class="card stock">HDFC Bank</div>
-<div class="card stock">ICICI Bank</div>
-<div class="card stock">Bharti Airtel</div>
-<div class="card stock">L&T</div>
-
-</div>
-</section>
-
-<section id="learn" class="section">
-<h2>Learning Center</h2>
-
-<div class="cards">
-
-<div class="card">
-<h3>What is NIFTY 50?</h3>
-<p>India's benchmark index of major companies.</p>
+<!-- WATCHLIST -->
+<div class="card" style="margin-top:20px;">
+<h3>⭐ Watchlist</h3>
+<input id="watch" placeholder="Add symbol">
+<button onclick="addWatch()">Add</button>
+<div id="watchlist" class="list"></div>
 </div>
 
-<div class="card">
-<h3>Fundamental Analysis</h3>
-<p>Study profits, revenue, debt and growth.</p>
+<!-- NEWS -->
+<div class="card" style="margin-top:20px;">
+<h3>📰 Market News</h3>
+<div class="news">
+- Global markets showing mixed sentiment.<br>
+- Tech stocks remain strong.<br>
+- Inflation data expected impact.<br>
+- FIIs active in Indian equities.
 </div>
-
-<div class="card">
-<h3>Technical Analysis</h3>
-<p>Use charts, patterns and indicators.</p>
-</div>
-
-<div class="card">
-<h3>Risk Management</h3>
-<p>Never risk more than you can afford to lose.</p>
 </div>
 
 </div>
-</section>
-
-</div>
-
-<footer>
-Indian Stock Market Hub © 2026
-</footer>
 
 <script>
-function addStock(){
-let input=document.getElementById("stockInput");
-let container=document.getElementById("watchlistContainer");
 
-if(input.value.trim()==="") return;
+const API_KEY = "P8DHOM7F9J8S73E0";
 
-let div=document.createElement("div");
-div.className="watchlist-item";
-div.innerText=input.value;
+/* ---------------- LIVE STOCK ---------------- */
+async function fetchStock(){
+const sym = document.getElementById("symbol").value;
 
-container.appendChild(div);
+if(!sym) return;
 
-saveWatchlist();
-input.value="";
+const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${sym}&apikey=${API_KEY}`;
+
+const res = await fetch(url);
+const data = await res.json();
+const q = data["Global Quote"];
+
+if(!q){
+document.getElementById("result").innerHTML =
+"❌ No data / API limit reached";
+return;
 }
 
-function saveWatchlist(){
-localStorage.setItem(
-"watchlist",
-document.getElementById("watchlistContainer").innerHTML
-);
+document.getElementById("result").innerHTML = `
+<h3>${sym}</h3>
+<p>Price: ${q["05. price"]}</p>
+<p>Change: ${q["10. change percent"]}</p>
+`;
 }
 
-window.onload=function(){
-let saved=localStorage.getItem("watchlist");
+/* ---------------- WATCHLIST ---------------- */
+function addWatch(){
+let v = document.getElementById("watch").value;
+if(!v) return;
+
+let div = document.createElement("div");
+div.innerText = v;
+document.getElementById("watchlist").appendChild(div);
+
+localStorage.setItem("watch", document.getElementById("watchlist").innerHTML);
+}
+
+window.onload = function(){
+let saved = localStorage.getItem("watch");
 if(saved){
-document.getElementById("watchlistContainer").innerHTML=saved;
+document.getElementById("watchlist").innerHTML = saved;
 }
-};
+}
 
-document.getElementById("searchBox").addEventListener("keyup",function(){
-let value=this.value.toLowerCase();
-let stocks=document.querySelectorAll(".stock");
+/* ---------------- INDEX SIMULATION ---------------- */
+function updateIndex(){
+let baseNifty = 24800;
+let baseSensex = 81700;
 
-stocks.forEach(stock=>{
-stock.style.display=
-stock.innerText.toLowerCase().includes(value)
-? "block"
-: "none";
-});
-});
+document.getElementById("nifty").innerText =
+(baseNifty + Math.floor(Math.random()*100)).toLocaleString();
 
-setInterval(()=>{
-let nifty=document.getElementById("nifty");
-let current=parseInt(nifty.innerText.replace(/,/g,""));
-current+=Math.floor(Math.random()*20)-10;
-nifty.innerText=current.toLocaleString();
-},3000);
+document.getElementById("sensex").innerText =
+(baseSensex + Math.floor(Math.random()*200)).toLocaleString();
+
+document.getElementById("status").innerText =
+Math.random() > 0.5 ? "Bullish 🟢" : "Volatile 🔴";
+}
+
+setInterval(updateIndex, 4000);
+updateIndex();
+
 </script>
 
 </body>
