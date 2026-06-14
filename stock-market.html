@@ -146,72 +146,206 @@ line-height:1.5;
 
 <script>
 
-const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${sym}&apikey=${API_KEY}`;
-const res = await fetch(url);
-const data = await res.json();
-const q = data["Global Quote"];
+const BASE_URL =
+"https://trading-backend-production-225b.up.railway.app";
 
-/* ---------------- LIVE STOCK ---------------- */
+let watchlist =
+JSON.parse(localStorage.getItem("watchlist")) || [];
+
+/* LIVE STOCK SEARCH */
 async function fetchStock(){
-const sym = document.getElementById("symbol").value;
+
+const sym =
+document.getElementById("symbol").value.trim().toUpperCase();
 
 if(!sym) return;
 
-const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${sym}&apikey=${API_KEY}`;
+try{
 
-const res = await fetch(url);
-const data = await res.json();
-const q = data["Global Quote"];
+const response =
+await fetch(`${BASE_URL}/stock/${sym}`);
 
-if(!q){
+const data =
+await response.json();
+
+const q = data.data;
+
+if(!q || !q["05. price"]){
+
 document.getElementById("result").innerHTML =
-"❌ No data / API limit reached";
+"❌ Stock not found";
+
 return;
 }
 
 document.getElementById("result").innerHTML = `
 <h3>${sym}</h3>
-<p>Price: ${q["05. price"]}</p>
+<p>Price: ₹ ${q["05. price"]}</p>
 <p>Change: ${q["10. change percent"]}</p>
+<p>Open: ${q["02. open"]}</p>
+<p>High: ${q["03. high"]}</p>
+<p>Low: ${q["04. low"]}</p>
 `;
+
+}catch(error){
+
+document.getElementById("result").innerHTML =
+"❌ Backend connection failed";
+
+console.error(error);
+
 }
 
-/* ---------------- WATCHLIST ---------------- */
+}
+
+/* WATCHLIST */
+
 function addWatch(){
-let v = document.getElementById("watch").value;
-if(!v) return;
 
-let div = document.createElement("div");
-div.innerText = v;
-document.getElementById("watchlist").appendChild(div);
+const input =
+document.getElementById("watch");
 
-localStorage.setItem("watch", document.getElementById("watchlist").innerHTML);
+const symbol =
+input.value.trim().toUpperCase();
+
+if(!symbol) return;
+
+if(!watchlist.includes(symbol)){
+
+watchlist.push(symbol);
+
+localStorage.setItem(
+"watchlist",
+JSON.stringify(watchlist)
+);
+
+renderWatchlist();
+
 }
 
-window.onload = function(){
-let saved = localStorage.getItem("watch");
-if(saved){
-document.getElementById("watchlist").innerHTML = saved;
-}
+input.value = "";
+
 }
 
-/* ---------------- INDEX SIMULATION ---------------- */
+async function renderWatchlist(){
+
+const container =
+document.getElementById("watchlist");
+
+container.innerHTML = "";
+
+for(const symbol of watchlist){
+
+try{
+
+const response =
+await fetch(`${BASE_URL}/stock/${symbol}`);
+
+const data =
+await response.json();
+
+const q = data.data;
+
+if(q && q["05. price"]){
+
+container.innerHTML += `
+<div>
+<b>${symbol}</b><br>
+₹ ${q["05. price"]}<br>
+${q["10. change percent"]}
+</div>
+`;
+
+}
+
+}catch(err){
+
+console.log(err);
+
+}
+
+}
+
+}
+
+/* NEWS */
+
+async function loadNews(){
+
+try{
+
+const response =
+await fetch(`${BASE_URL}/news`);
+
+const data =
+await response.json();
+
+const news =
+data.news || [];
+
+const newsContainer =
+document.querySelector(".news");
+
+newsContainer.innerHTML = "";
+
+news.slice(0,10).forEach(item=>{
+
+newsContainer.innerHTML += `
+<div style="margin-bottom:10px;">
+• ${item.title}
+</div>
+`;
+
+});
+
+}catch(error){
+
+document.querySelector(".news").innerHTML =
+"Unable to load news.";
+
+}
+
+}
+
+/* INDEX DISPLAY */
+
 function updateIndex(){
+
 let baseNifty = 24800;
 let baseSensex = 81700;
 
 document.getElementById("nifty").innerText =
-(baseNifty + Math.floor(Math.random()*100)).toLocaleString();
+(baseNifty + Math.floor(Math.random()*100))
+.toLocaleString();
 
 document.getElementById("sensex").innerText =
-(baseSensex + Math.floor(Math.random()*200)).toLocaleString();
+(baseSensex + Math.floor(Math.random()*200))
+.toLocaleString();
 
 document.getElementById("status").innerText =
-Math.random() > 0.5 ? "Bullish 🟢" : "Volatile 🔴";
+Math.random() > 0.5
+? "Bullish 🟢"
+: "Volatile 🔴";
+
 }
 
-setInterval(updateIndex, 4000);
+/* LOAD */
+
+window.onload = function(){
+
 updateIndex();
+
+renderWatchlist();
+
+loadNews();
+
+setInterval(updateIndex,4000);
+
+setInterval(renderWatchlist,60000);
+
+setInterval(loadNews,300000);
+
+};
 
 </script>
 
